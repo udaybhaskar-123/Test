@@ -1,0 +1,34 @@
+{
+   "@version": "01.00",
+   "Sender": {
+      "Id": "HRXMLEMPLID",
+      "Credential": "30056"
+   },
+   "Recipient": {
+      "Id": []
+   },
+   "TransactInfo": {
+      "@transactType": "response",
+      "TransactId": "15747",
+      "TimeStamp": "2019-03-14 5:30 PM",
+      "Status": {
+         "Code": "200",
+         "ShortDescription": "Success",
+         "LongDescription": "FORM Data transfer was a success"
+      }
+   },
+   "Packet": {
+      "PacketInfo": {
+         "@packetType": "response",
+         "PacketId": "1",
+         "Action": "SET",
+         "Manifest": "AJ_IMPORT_FDI",
+         "Status": {
+            "Code": "200",
+            "ShortDescription": "16024385",
+            "LongDescription": "FORM Data transfer was a success"
+         }
+      },
+      "Payload": []
+   }
+}

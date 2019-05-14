@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="TmpEnvelop_xml_type" format="xml">
+      <types:example format="xml" element="Envelope" location="examples/form_output.xml"/>
+    </types:type>
+    <types:type name="Output_xml_type" format="xml">
+      <types:example format="xml" element="{http://trm.brassring.com/HRIS}Dispatch" location="examples/form_output-1.xml"/>
+    </types:type>
+    <types:type name="CDATA_json_type" format="json">
+      <types:shape format="weave" example="examples/Online_JSON.txt"><![CDATA[%dw 2.0
+type CDATA_json_type = {| CDATAMessage: String |} {"MetadataFormat": "json",
+"example": "{\"CDATAMessage\":\"Message\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="Response_xml_Type" format="xml">
+      <types:example format="xml" element="{http://trm.brassring.com/HRIS}DispatchResponse" location="examples/form_output-2.xml"/>
+    </types:type>
+    <types:type name="Response_envelope_xml_Type" format="xml">
+      <types:example format="xml" element="Envelope" location="examples/form_output-3.xml"/>
+    </types:type>
+    <types:type name="response_envelope_json_type" format="json">
+      <types:shape format="weave" example="examples/form_output-4.xml"><![CDATA[%dw 2.0
+type response_envelope_json_type = {|
+  "@version": String, 
+  Sender: {|
+    Id: String, 
+    Credential: String
+  |}, 
+  Recipient: {| Id: Array<Any> |}, 
+  TransactInfo: {|
+    "@transactType": String, 
+    TransactId: String, 
+    TimeStamp: String, 
+    Status: {|
+      Code: String, 
+      ShortDescription: String, 
+      LongDescription: String
+    |}
+  |}, 
+  Packet: {|
+    PacketInfo: {|
+      "@packetType": String, 
+      PacketId: String, 
+      Action: String, 
+      Manifest: String, 
+      Status: {|
+        Code: String, 
+        ShortDescription: String, 
+        LongDescription: String
+      |}
+    |}, 
+    Payload: Array<Any>
+  |}
+|} {"MetadataFormat": "json",
+"example": "{\"@version\":\"01.00\",\"Sender\":{\"Id\":\"HRXMLEMPLID\",\"Credential\":\"30056\"},\"Recipient\":{\"Id\":[]},\"TransactInfo\":{\"@transactType\":\"response\",\"TransactId\":\"15747\",\"TimeStamp\":\"2019-03-14 5:30 PM\",\"Status\":{\"Code\":\"200\",\"ShortDescription\":\"Success\",\"LongDescription\":\"FORM Data transfer was a success\"}},\"Packet\":{\"PacketInfo\":{\"@packetType\":\"response\",\"PacketId\":\"1\",\"Action\":\"SET\",\"Manifest\":\"AJ_IMPORT_FDI\",\"Status\":{\"Code\":\"200\",\"ShortDescription\":\"16024385\",\"LongDescription\":\"FORM Data transfer was a success\"}},\"Payload\":[]}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="Response_JSON_Error_type" format="json">
+      <types:shape format="weave" example="examples/Response_jason_error.txt"><![CDATA[%dw 2.0
+type Response_JSON_Error_type = {|
+  ErrorType: String, 
+  ErrorException: String, 
+  ErrorMessage: String
+|} {"MetadataFormat": "json",
+"example": "{\"ErrorType\":\"ErrorType\",\"ErrorException\":\"ErrorType\",\"ErrorMessage\":\"ErrorType\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="TmpForm_xml_Type" format="xml">
+      <types:example format="xml" element="form" location="examples/form_output-6.xml"/>
+    </types:type>
+    <types:type name="Input_JSON_Type" format="json">
+      <types:shape format="weave" example="examples/JSON_Input-2.txt"><![CDATA[%dw 2.0
+type Input_JSON_Type = {|
+  DispatchRequest: {|
+    Sender: {|
+      Id: String, 
+      Credential: String
+    |}, 
+    Recipient: {| Id: String |}, 
+    TransactInfo: {|
+      transactType: String, 
+      TransactId: String, 
+      TimeStamp: String
+    |}, 
+    PacketInfo: {|
+      packetType: String, 
+      PacketId: String, 
+      Action: String, 
+      Manifest: String
+    |}, 
+    form: {|
+      formTypeId: String, 
+      formName: String, 
+      formId: String, 
+      action: String, 
+      resumeKey: String, 
+      FirstName: String, 
+      LastName: String, 
+      email: String, 
+      homePhone: String, 
+      language: String, 
+      autoreq: String, 
+      optionalreq: String, 
+      FormInput: Array<{|
+        name: String, 
+        title: String, 
+        value: String
+      |}>
+    |}
+  |}
+|} {"MetadataFormat": "json",
+"example": "{\"DispatchRequest\":{\"Sender\":{\"Id\":\"HRXMLEMPLID\",\"Credential\":\"30056\"},\"Recipient\":{\"Id\":\"\"},\"TransactInfo\":{\"transactType\":\"data\",\"TransactId\":\"15747\",\"TimeStamp\":\"2019-03-14 5:30 PM\"},\"PacketInfo\":{\"packetType\":\"data\",\"PacketId\":\"1\",\"Action\":\"SET\",\"Manifest\":\"AJ_IMPORT_FDI\"},\"form\":{\"formTypeId\":\"4341\",\"formName\":\"GBR_AMBERJACK_IMPORT\",\"formId\":\"\",\"action\":\"Update\",\"resumeKey\":\"16024385\",\"FirstName\":\"Al E.\",\"LastName\":\"Gator\",\"email\":\"ali@gator.com\",\"homePhone\":\"\",\"language\":\"GB\",\"autoreq\":\"4565BR\",\"optionalreq\":\"\",\"FormInput\":[{\"name\":\"164645\",\"title\":\"Candidates First Name\",\"value\":\"Al E.\"},{\"name\":\"164649\",\"title\":\"HireVue Assessment URL (if applicable)\",\"value\":\"\"},{\"name\":\"164648\",\"title\":\"Test Name\",\"value\":\"SJT\"},{\"name\":\"164647\",\"title\":\"Candidates First Name\",\"value\":\"Pass\"},{\"name\":\"164650\",\"title\":\"Update HR Status\",\"value\":\"\"},{\"name\":\"164646\",\"title\":\"Candidates E-mail Address\",\"value\":\"\"}]}}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#9cd146a4-a62c-44be-9630-5c1b07a15075">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Input_JSON_Type"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="TmpEnvelop_xml_type"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2a4bbb16-057a-424f-b320-e8dc58d3b58e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Input_JSON_Type"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="TmpForm_xml_Type"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#60c7d4f2-5ae2-4847-b845-4fd1103d8d7a">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Output_xml_type"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#4cd91e62-8eca-47b6-ad5d-05c7b4bd0dc7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Response_xml_Type"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b8d49c29-996c-488c-af9c-5f4e341949bc">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Response_envelope_xml_Type"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#af1a37e0-9547-42b7-bd17-b666eaffb78c">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="response_envelope_json_type"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

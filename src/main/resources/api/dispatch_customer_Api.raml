@@ -1,0 +1,131 @@
+#%RAML 1.0
+version: v1
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/b1430f1c-2fae-49e6-8f10-407fd26dd040/ # 
+title: dispatch_customer_Api
+
+types:
+  FormInputtype:
+   type: object
+   properties:
+    name: string
+    title: string 
+    value?: string
+
+  Customertype:
+    type: object
+    properties:
+     DispatchRequest:
+      properties:
+       Sender:
+          properties:
+            Id: string
+            Credential: string
+       Recipient:
+          properties:
+            Id?: string
+       TransactInfo:
+          properties:
+            transactType: string
+            TransactId: string 
+            TimeStamp: string
+       PacketInfo:
+          properties:
+            packetType: string
+            PacketId: string 
+            Action: string
+            Manifest: string
+       form:
+          properties:
+            formTypeId: string
+            formName: string
+            formId?: string
+            action: string
+            resumeKey: string
+            FirstName: string
+            LastName: string
+            email: string
+            homePhone: string
+            language: string
+            autoreq: string
+            optionalreq?: string
+            FormInput: FormInputtype[]
+     
+/submitCustomerInfo:
+ post:
+  description: Submit Customer Information
+  displayName: submitCustomerInfo
+  body:
+   application/json:
+     type: Customertype
+     example:
+      DispatchRequest:
+        Sender:
+          Id: "HRXMLEMPLID"
+          Credential: "30056"
+        Recipient:
+          Id: ""
+        TransactInfo:
+          transactType: "data"
+          TransactId: "15747"
+          TimeStamp: "2019-03-14 5:30 PM"
+        PacketInfo:
+          packetType: "data"
+          PacketId: "1"
+          Action: "SET"
+          Manifest: "AJ_IMPORT_FDI"
+        form:
+          formTypeId: "4341"
+          formName: "GBR_AMBERJACK_IMPORT"
+          formId: ""
+          action: "Update"
+          resumeKey: "16024385"
+          FirstName: "Al E."
+          LastName: "Gator"
+          email: "ali@gator.com"
+          homePhone: ""
+          language: "GB"
+          autoreq: "4565BR"
+          optionalreq: ""
+          FormInput:
+            [
+             {  name: "164645",
+                title: "Candidates First Name",
+                value: "Al E."
+              },
+              { name: "164649",
+                title: "HireVue Assessment URL (if applicable)",
+                value: ""
+              },
+              { name: "164648",
+                title: "Test Name",
+                value: "SJT"
+              },
+              { name: "164647",
+                title: "Candidates First Name",
+                value: "Pass."
+              },
+              { name: "164650",
+                title: "Update HR Status",
+                value: ""
+              },
+              { name: "164646",
+                title: "Candidates E-mail Address",
+                value: ""
+              }
+            ]
+
+  responses:
+    200:
+     body:
+       application/json:
+        example:
+         { "StatusCode": 200,
+           "ShortDescription": "Success",
+           "LongDescription": "FORM Data transfer was a success" }
+    417:
+     body:
+       application/json:
+        example:
+         { "StatusCode": 417,
+           "ShortDescription": "Failure",
+           "LongDescription": "SocketException :: An error occurred whilst performing a socket operation: getsockopt" }           

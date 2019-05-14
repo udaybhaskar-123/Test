@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="8516d52e-ce25-48c9-8da8-50ebf338394b" >
+		<wsc:connection soapVersion="SOAP12" wsdlLocation="DispatchMessage.wsdl" service="DispatchMessage" port="DispatchMessageSoap12" address="http://stagingkrb.brassring.com/HRISprocessor9/DispatchMessage.asmx" />
+	</wsc:config>
+	<flow name="kanexadispatchmessageFlow" doc:id="70d0c5cd-2d37-4170-8b59-1885030f4a76" >
+		<set-payload value='&lt;hris:Dispatch xmlns:hris="http://trm.brassring.com/HRIS"&gt;Hello&lt;/hris:HRXML&gt;&lt;/hris:Dispatch&gt;' doc:name="Set Payload" doc:id="fc8c0ee3-db6a-4a15-b6d7-65c716b0a45d" mimeType="application/xml"/>
+		<wsc:consume doc:name="Consume" doc:id="189b30f3-c0bf-46ea-8ba6-a9a7822240b5" config-ref="Web_Service_Consumer_Config" operation="Dispatch"/>
+		<flow-ref doc:name="ParseSoapResponseSub_Flow" doc:id="e3443fb0-a67b-4a9d-a084-c9367739e302" name="ParseSoapResponseSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="17201d52-4bcf-4eb1-8d41-2efc6cf78d4b" message="#[payload]"/>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7153a16f-7957-42d5-a4b7-ef34901f6ec4" type="WSC:BAD_REQUEST">
+				<ee:transform doc:name="Transform Message" doc:id="8bd82eae-b7c6-4b80-ba7e-f9f9f44c3d00">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ "Error Type": "WSC:BAD_REQUEST",
+ "Error Message": "Incorrect Input(Bad) Request!"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="a4ea9ea1-ae55-4b44-b16e-5ba0136fe936" />
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="28192fbf-1afe-4ac6-97b9-cc07973e7cb7" type="WSC:SOAP_FAULT">
+				<ee:transform doc:name="Transform Message" doc:id="c1185984-a60e-42e2-b470-1f14e1194399">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ "Error Type": "WSC:SOAP_FAULT",
+ "Error Message": "The resource you are looking for has been removed, had its name changed, or is temporarily unavailable."}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="34a40dba-5709-4e5c-959d-e425fff18b4e" />
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f69a1859-6b76-4010-8c19-13fd48730704" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="00ddbb71-d3a5-4fa8-a8cd-78ceb65814eb">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ "Error Type": error.errorType,
+  "Error Message": "Request timed out/Unknown Error"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="9f38fbe3-a3be-47e4-a114-5eaa5024e649" message="#[payload]" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="CreateSoapRequest_Sub_Flow" doc:id="9f653c06-6c3b-46d6-abef-29f59594f545" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="a3de81c6-83ca-45d3-b3f1-74dac918dd37" >
+			<route >
+				<ee:transform doc:name="TransformMessage_Envelop" doc:id="9cd146a4-a62c-44be-9630-5c1b07a15075" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml encoding = "UTF-8"
+---
+{
+	Envelope @(version: "01.00" as String): {
+		Sender: {
+			Id: payload.DispatchRequest.Sender.Id,
+			Credential: payload.DispatchRequest.Sender.Credential as Number
+		},
+		Recipient: payload.DispatchRequest.Recipient,
+		TransactInfo @(transactType: payload.DispatchRequest.TransactInfo.transactType): {
+			TransactId: payload.DispatchRequest.TransactInfo.TransactId as Number,
+			TimeStamp: payload.DispatchRequest.TransactInfo.TimeStamp
+		},
+		Packet: {
+			PacketInfo @(packetType: payload.DispatchRequest.PacketInfo.packetType): {
+				PacketId: payload.DispatchRequest.PacketInfo.PacketId as Number,
+				Action: payload.DispatchRequest.PacketInfo.Action,
+				Manifest: payload.DispatchRequest.PacketInfo.Manifest
+			},
+			Payload: ""
+		}
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="616248b3-d299-42ff-b90a-c52f3bba48e0" mimeType="text/plain"/>
+				<ee:transform doc:name="Transform Message_ToString" doc:id="ee263061-f6e2-46ad-b86f-09eaaba92d00">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+ output application/java
+ ---
+ payload as String]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value='#["&lt;![CDATA[" ++ payload ++ "]]&gt;"]' doc:name="Set Variable_Envelope" doc:id="45756126-16c5-48be-a25c-e0b8e9c4fca8" variableName="var_envelope" mimeType="text/plain"/>
+			</route>
+			<route >
+				<ee:transform doc:name="TransformMessage_Form" doc:id="2a4bbb16-057a-424f-b320-e8dc58d3b58e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	form @(formTypeId: payload.DispatchRequest.form.formTypeId , formName: payload.DispatchRequest.form.formName , formId: payload.DispatchRequest.form.formId , action: payload.DispatchRequest.form.action , resumeKey: payload.DispatchRequest.form.resumeKey as Number , FirstName: payload.DispatchRequest.form.FirstName , LastName: payload.DispatchRequest.form.LastName , email: payload.DispatchRequest.form.email , homePhone: payload.DispatchRequest.form.homePhone ,
+	language: payload.DispatchRequest.form.language , autoreq: payload.DispatchRequest.form.autoreq , optionalreq: payload.DispatchRequest.form.optionalreq): {
+		(payload.DispatchRequest.form.FormInput map ( formInput , indexOfFormInput ) -> {
+			FormInput @(name: formInput.name , title: formInput.title): formInput.value
+		})
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="de4a7463-13af-4de0-bbe6-4705d48ea01c" mimeType="text/plain"/>
+				<ee:transform doc:name="Transform Message_ToString" doc:id="8f3b7115-859d-477b-8d92-9e5ffaaf865e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+ output application/java
+ ---
+ payload as String]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value='#["&lt;Payload&gt;![CDATA[" ++ payload ++ "]]]]&gt;&lt;![CDATA[&gt;&lt;/Payload&gt;"]' doc:name="Set Variable_form" doc:id="51af5f51-1b85-4213-8ad6-9524dd26b954" variableName="var_form" mimeType="text/plain"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="60c7d4f2-5ae2-4847-b845-4fd1103d8d7a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml encoding="UTF-8"
+ns hris http://trm.brassring.com/HRIS
+---
+{
+	hris#Dispatch: {
+		hris#HRXML: (vars.var_envelope
+default "") replace "<Payload/>" with (vars.var_form default "") 
+ replace  "\n" with ""
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="380849a0-0e4d-496e-b89d-119de58a0032" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="ParseSoapResponseSub_Flow" doc:id="ac5c5d46-b143-446b-bad5-fe23e75c75ee" >
+		<set-payload value='#[%dw 2.0
+output application/java
+ns ns0 http://trm.brassring.com/HRIS
+---
+payload.ns0#DispatchResponse.ns0#DispatchResult replace "&lt;![CDATA[" with ""
+ replace "]]&gt;" with ""]' doc:name="Set Payload" doc:id="4cd91e62-8eca-47b6-ad5d-05c7b4bd0dc7" mimeType="application/xml"/>
+		<ee:transform doc:name="Transform Message" doc:id="b8d49c29-996c-488c-af9c-5f4e341949bc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="af1a37e0-9547-42b7-bd17-b666eaffb78c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Sender: {
+		Id: payload.Envelope.Sender.Id,
+		Credential: payload.Envelope.Sender.Credential as String
+	},
+	Recipient: {
+		Id: payload.Envelope.Recipient.Id
+	},
+	TransactInfo: {
+		TransactId: payload.Envelope.TransactInfo.TransactId as String,
+		TimeStamp: payload.Envelope.TransactInfo.TimeStamp,
+		Status: payload.Envelope.TransactInfo.Status
+	},
+	Packet: payload.Envelope.Packet
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

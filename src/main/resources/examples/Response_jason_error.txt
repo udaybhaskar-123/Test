@@ -1,0 +1,5 @@
+{
+  "ErrorType" : "ErrorType",
+  "ErrorException" : "ErrorType",
+  "ErrorMessage" : "ErrorType"
+}
